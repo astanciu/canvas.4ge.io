@@ -5,44 +5,87 @@ import Grid from '../Grid/Grid.js';
 import styles from './Canvas.module.css'; 
 
 class Canvas extends React.Component {
-  constructor(){
-    super()
-    this.MIN_SCALE = 0.05
-    this.MAX_SCALE = 5
-    this.state={
-      view: {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        x: 0, 
-        y: 0, 
-        scale: 1
-      },
-      mouseMoveStart: null
-    }
+  state={
+    view: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      x: window.innerWidth/2, 
+      y: window.innerHeight/2, 
+      scale: 1
+    },
+    mouseMoveStart: null, 
   }
+
+  MIN_SCALE = 0.1
+  MAX_SCALE = 4
+  force = {x: 0, y: 0}
+  velocity = {x: 0, y: 0}
+  acc= {x: 0, y: 0}
+  friction= 1
 
   setCanvasSize = debounce(() => {
     const view = {...this.state.view};
     view.width = window.innerWidth;
     view.height = window.innerHeight;
     this.setState({ view })
-  }, 100)
+  }, 50)
 
   setCanvasZoom = (e) => {
-    const zoomDelta = e.deltaY < 0 ? -0.1 : 0.1;
-    let scale = this.state.view.scale + zoomDelta
-    if (scale <= this.MIN_SCALE) scale = this.MIN_SCALE
-    if (scale >= this.MAX_SCALE) scale = this.MAX_SCALE
     const view = {...this.state.view};
+
+    let delta =  e.deltaY ? e.deltaY : 0-e.wheelDeltaY;
+    if (isNaN(delta) || delta === 0) return;
+
+    let scale = view.scale + delta/-700;
+    if (scale < this.MIN_SCALE) {
+      scale = this.MIN_SCALE;
+    }
+    else if (scale > this.MAX_SCALE) {
+      scale = this.MAX_SCALE;
+    }
     view.scale = scale
+    
+    const xFactor = scale / view.scale - 1; //trial & error
+    const posDelta = {
+      x:  e.clientX - view.x,
+      y: e.clientY - view.y  
+    }
+    view.x += -1 * posDelta.x * xFactor
+    view.y += -1 * posDelta.y * xFactor
+    
     this.setState({view})
   }
 
   setCanvasPan = (delta, mouse) => {
     const view = {...this.state.view};
+    this.velocity = delta
     view.x += delta.x
     view.y += delta.y
     this.setState({ view, mouseMoveStart: { x: mouse.screenX, y: mouse.screenY } })
+  }
+
+  loop = (x) => {
+    this.friction -= .05
+    this.velocity = {
+      x: this.velocity.x * this.friction,
+      y: this.velocity.y * this.friction
+    }
+    if (this.velocity.x < 0.02 
+      && this.velocity.x > -0.02
+      && this.velocity.y < 0.02
+      && this.velocity.y > -0.02
+    ) {  
+      this.friction = 1
+      return;
+    };
+    
+    const view = {...this.state.view};
+    view.x += this.velocity.x 
+    view.y += this.velocity.y 
+
+    this.setState({view})
+    requestAnimationFrame(this.loop.bind(this))
+
   }
 
   componentDidMount(){
@@ -69,6 +112,7 @@ class Canvas extends React.Component {
   
   mouseUp = (e) => {
     this.setState({mouseMoveStart: null})
+    requestAnimationFrame(this.loop.bind(this))
   }
 
 
@@ -90,9 +134,9 @@ class Canvas extends React.Component {
 
         <g transform={this.getTransform()}>
           <Grid view={this.state.view} type="dot"/>
-          
-          {/* <rect width="100%" height="100%" fill="url(#grid)" /> */}
           <circle cx="0" cy="0" r="100" stroke="black" strokeWidth="3" fill="red" />
+          <circle cx="-150" cy="0" r="20" stroke="black" strokeWidth="1" fill="blue" />
+          <circle cx="150" cy="150" r="20" stroke="black" strokeWidth="1" fill="blue" />
         </g>
       </svg>
     )

@@ -1,7 +1,5 @@
 import React from 'react';
-import range from 'lodash/range';
 import styles from './Grid.module.css'; 
-
 
 export default ({view}) => {
   const SIZE = 100000 
