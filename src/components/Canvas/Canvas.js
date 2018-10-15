@@ -1,7 +1,8 @@
 import React from 'react'
 import debounce from 'lodash/debounce';
 import Grid from '../Grid/Grid.js';
-
+import Node from '../Node/Node.js'
+import Hammer from '../Util/Hammer.js'
 import styles from './Canvas.module.css'; 
 
 class Canvas extends React.Component {
@@ -16,8 +17,8 @@ class Canvas extends React.Component {
     mouseMoveStart: null, 
   }
 
-  MIN_SCALE = 0.1
-  MAX_SCALE = 4
+  MIN_SCALE = 0.25
+  MAX_SCALE = 3
   force = {x: 0, y: 0}
   velocity = {x: 0, y: 0}
   acc= {x: 0, y: 0}
@@ -30,10 +31,32 @@ class Canvas extends React.Component {
     this.setState({ view })
   }, 50)
 
-  setCanvasZoom = (e) => {
+  onPinch = (event) => {
+    let size =  event.distance ;
+    if (event.additionalEvent === 'pinchout') size *= -1.25
+    if (event.additionalEvent === 'pinchin') size *= .9
+    let location = {
+      x: event.center.x,
+      y: event.center.y
+    }
+
+    this.zoomCanvas(size, location)
+  }
+
+  onWheel = (event) => {
+    let size =  event.deltaY ? event.deltaY : 0-event.wheelDeltaY;
+    let location = {
+      x: event.clientX,
+      y: event.clientY
+    }
+
+    this.zoomCanvas(size, location)
+  }
+
+  zoomCanvas = (delta, location) => {
     const view = {...this.state.view};
 
-    let delta =  e.deltaY ? e.deltaY : 0-e.wheelDeltaY;
+    
     if (isNaN(delta) || delta === 0) return;
 
     let scale = view.scale + delta/-500;
@@ -46,8 +69,8 @@ class Canvas extends React.Component {
     
     const xFactor = scale / view.scale - 1; //trial & error
     const posDelta = {
-      x: e.clientX - view.x,
-      y: e.clientY - view.y  
+      x: location.x - view.x,
+      y: location.y - view.y  
     }
 
     view.scale = scale
@@ -57,15 +80,15 @@ class Canvas extends React.Component {
     this.setState({view})
   }
 
-  setCanvasPan = (delta, mouse) => {
+  panCanvas = (delta, mouse) => {
     const view = {...this.state.view};
-    this.velocity = delta
+    // this.velocity = delta
     view.x += delta.x
     view.y += delta.y
     this.setState({ view, mouseMoveStart: { x: mouse.screenX, y: mouse.screenY } })
   }
 
-  loop = (x) => {
+  glideCanvas = () => {
     this.friction -= 0.01
     if (this.friction < 0.01) this.friction = 0.01
     this.velocity = {
@@ -86,62 +109,76 @@ class Canvas extends React.Component {
     view.y += this.velocity.y 
 
     this.setState({view})
-    requestAnimationFrame(this.loop.bind(this))
-
+    this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this))
   }
 
   componentDidMount(){
     this.setCanvasSize();
     window.addEventListener("resize", this.setCanvasSize);
   }
+  
   componentWillUnmount(){
     window.removeEventListener("resize", this.setCanvasSize);
   }
 
-  mouseDown = (e) => {
-    this.setState({mouseMoveStart: { x: e.screenX, y: e.screenY }})
-  }
-
-  mouseMove = (e) => {
-    if (this.state.mouseMoveStart){
-      const delta = {
-        x: e.screenX - this.state.mouseMoveStart.x,
-        y: e.screenY - this.state.mouseMoveStart.y
-      }
-      this.setCanvasPan(delta, e)
-    }
-  }
-  
-  mouseUp = (e) => {
-    this.setState({mouseMoveStart: null})
-    requestAnimationFrame(this.loop.bind(this))
-  }
-
-
   getTransform = () => {
     const view = this.state.view;
-
     return `matrix(${view.scale},0,0,${view.scale},${view.x},${view.y})`
   }
+
+  onPanStart = (event) => {
+    this.originalView = this.state.view
+  }
+
+  onPanEnd = (event) => {
+    this.originalView = null;
+    this.velocity = {
+      x: event.velocityX*10,
+      y: event.velocityY*10
+    }
+    requestAnimationFrame(this.glideCanvas.bind(this));
+  }
+
+  onPan = (event) => {
+    if (!this.originalView) return;
+    const view = {...this.state.view};
+    view.x = this.originalView.x + event.deltaX
+    view.y = this.originalView.y + event.deltaY
+    
+    this.setState({ view })
+  }
+
   render(){
     return (
+      <Hammer 
+        
+        onPan={this.onPan} onPanStart={this.onPanStart} onPanEnd={this.onPanEnd}
+        onPinch={this.onPinch}
+        options={{
+          recognizers: {
+             pinch: { enable: true }
+          }
+       }}
+        >
       <svg xmlns="http://www.w3.org/2000/svg"
         width={this.state.view.width} height={this.state.view.height} 
-        onMouseDown={this.mouseDown.bind(this)}
-        onMouseMove={this.mouseMove.bind(this)}
-        onMouseUp={this.mouseUp.bind(this)}
-        onWheel={this.setCanvasZoom.bind(this)}
+        // onMouseDown={this.mouseDown.bind(this)}
+        // onMouseMove={this.mouseMove.bind(this)}
+        // onMouseUp={this.mouseUp.bind(this)}
+        onWheel={this.onWheel}
         className={styles.Canvas}
       >
 
         <g transform={this.getTransform()}>
           <Grid view={this.state.view} type="dot"/>
-          <circle cx="0" cy="0" r="100" stroke="black" strokeWidth="3" fill="red" />
-          <circle cx="-150" cy="0" r="20" stroke="black" strokeWidth="1" fill="blue" />
-          <circle cx="150" cy="150" r="20" stroke="black" strokeWidth="1" fill="blue" />
+          {/* <circle cx="0" cy="0" r="100" fill="#209abe" />
+          <circle cx="-150" cy="0" r="20" fill="#eee" />
+          <circle cx="150" cy="150" r="20" fill="#6780a5" /> */}
+          <Node />
          
         </g>
       </svg>
+      </Hammer>
     )
   }
 }
