@@ -3,7 +3,7 @@
 // Modifications made as needed
 // 
 
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 
