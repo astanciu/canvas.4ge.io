@@ -36,20 +36,21 @@ class Canvas extends React.Component {
     let delta =  e.deltaY ? e.deltaY : 0-e.wheelDeltaY;
     if (isNaN(delta) || delta === 0) return;
 
-    let scale = view.scale + delta/-700;
+    let scale = view.scale + delta/-500;
     if (scale < this.MIN_SCALE) {
       scale = this.MIN_SCALE;
     }
     else if (scale > this.MAX_SCALE) {
       scale = this.MAX_SCALE;
     }
-    view.scale = scale
     
     const xFactor = scale / view.scale - 1; //trial & error
     const posDelta = {
-      x:  e.clientX - view.x,
+      x: e.clientX - view.x,
       y: e.clientY - view.y  
     }
+
+    view.scale = scale
     view.x += -1 * posDelta.x * xFactor
     view.y += -1 * posDelta.y * xFactor
     
@@ -65,7 +66,8 @@ class Canvas extends React.Component {
   }
 
   loop = (x) => {
-    this.friction -= .05
+    this.friction -= 0.01
+    if (this.friction < 0.01) this.friction = 0.01
     this.velocity = {
       x: this.velocity.x * this.friction,
       y: this.velocity.y * this.friction
@@ -75,7 +77,7 @@ class Canvas extends React.Component {
       && this.velocity.y < 0.02
       && this.velocity.y > -0.02
     ) {  
-      this.friction = 1
+      this.friction = 1.0
       return;
     };
     
@@ -123,7 +125,7 @@ class Canvas extends React.Component {
   }
   render(){
     return (
-      <svg 
+      <svg xmlns="http://www.w3.org/2000/svg"
         width={this.state.view.width} height={this.state.view.height} 
         onMouseDown={this.mouseDown.bind(this)}
         onMouseMove={this.mouseMove.bind(this)}
@@ -137,6 +139,7 @@ class Canvas extends React.Component {
           <circle cx="0" cy="0" r="100" stroke="black" strokeWidth="3" fill="red" />
           <circle cx="-150" cy="0" r="20" stroke="black" strokeWidth="1" fill="blue" />
           <circle cx="150" cy="150" r="20" stroke="black" strokeWidth="1" fill="blue" />
+         
         </g>
       </svg>
     )
