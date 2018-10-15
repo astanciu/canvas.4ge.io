@@ -171,9 +171,13 @@ class Canvas extends React.Component {
           onWheel={this.onWheel}
           className={styles.Canvas}
         >
-          <g transform={this.getTransform()}>
+          <g id="Canvas" transform={this.getTransform()}>
             <Grid view={this.state.view} type="dot" />
-            <Node />
+            <Node icon='check' />
+            <Node icon='cloud' location={{x: 250, y: 0}} />
+            <Node icon='pencil' location={{x: -550, y: 0}} />
+            <Node location={{x: -250, y: 200}} />
+            {/* <circle cx="0" cy="0" r="10" stroke="black" stroke-width="0" fill="blue" /> */}
           </g>
         </svg>
       </Hammer>
