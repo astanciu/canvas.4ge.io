@@ -83,26 +83,6 @@ class Canvas extends React.Component {
 
   componentDidMount() {
     this.setCanvasSize();
-
-    // const node = ReactDOM.findDOMNode(this);
-    // // const node = this.ref;
-    // console.log(node);
-    // window.alex = node
-    // node.addEventListener('pointerdown', this.test)
-    // node.addEventListener('pointermove', this.test)
-    // node.addEventListener('pointerup', this.test)
-    
-    // node.addEventListener('mouseup', this.test)
-    // node.addEventListener('mousedown', this.test)
-    // node.addEventListener('mousemove', this.test)
-    
-    // node.addEventListener('click', this.test)
-
-    
-
-    
-    
-
     window.addEventListener('resize', this.setCanvasSize);
   }
 
@@ -119,11 +99,11 @@ class Canvas extends React.Component {
     this.friction = 1.0;
     this.originalView = this.state.view;
     this.panning = true;
-    console.log('PanStart', event.srcEvent.type, event.target)
+    // console.log('PanStart', event.srcEvent.type, event.target)
   };
 
   onPanEnd = event => {
-    console.log('PanEnd', event.srcEvent.type, event.target)
+    // console.log('PanEnd', event.srcEvent.type, event.target)
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
     if (!this.panning) return;
     this.originalView = null;
@@ -137,6 +117,7 @@ class Canvas extends React.Component {
   };
 
   onPan = event => {
+    console.log(`pan`, event.srcEvent.type);
     if (!this.originalView) return;
     const view = { ...this.state.view };
     view.x = this.originalView.x + event.deltaX;
@@ -196,11 +177,11 @@ class Canvas extends React.Component {
     }
 
     this.setState({nodes})
-    
   }
 
   render() {
-    const nodes = this.state.nodes
+      //
+      const nodes = this.state.nodes
       .map(node => <Node 
           key={node.id} 
           node={node}
@@ -208,10 +189,6 @@ class Canvas extends React.Component {
         />)
     return (
       <Hammer
-        // onPan={this.test}
-        // onPanStart={this.test}
-        // onPanEnd={this.test}
-
         onPan={this.onPan}
         onPanStart={this.onPanStart}
         onPanEnd={this.onPanEnd}
@@ -230,8 +207,6 @@ class Canvas extends React.Component {
           height={this.state.view.height}
           onWheel={this.onWheel}
           className={styles.Canvas}
-          ref={e => this.ref=e}
-          
         >
           <g id="Canvas" transform={this.getTransform()}>
             <Grid view={this.state.view} type="dot" />

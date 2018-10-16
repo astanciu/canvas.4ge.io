@@ -16,40 +16,35 @@ export default class Node extends React.Component {
     node.addEventListener('pointermove', this.eventTrap)
     node.addEventListener('pointerup', this.eventTrap)
     node.addEventListener('pointerdown', this.eventTrap)
-    node.addEventListener('touchmove', this.eventTrap)
+    // node.addEventListener('touchmove', this.eventTrap)
     node.addEventListener('mouseup', this.eventTrap)
-    
-    
-    // need this node.addEventListener('mousedown', this.eventTrap)
 
     node.addEventListener('click', this.eventTrap)
     node.addEventListener('mousemove', this.eventTrap)
   }
 
   onDrag = (e) => {
-   e.stopPropagation();
+    // console.log(`drag`, e);
+    console.log(`drag`, e.type);
+    // e.preventDefault();
+    e.stopPropagation();
+    // e.stopImmediatePropagation()
   }
   onStart = (e) => {
-    console.log('onstart') 
     this.startPosition = {x: e.nativeEvent.pageX, y: e.nativeEvent.pageY}
   }
   
   onStop = (e) => {
-    console.log('onstop') 
     const delta = {x: e.pageX - this.startPosition.x, y: e.pageY - this.startPosition.y}
     const node = {...this.props.node}
     
     node.position = {x: node.position.x + delta.x, y: node.position.y + delta.y}
     this.props.updateNode(node)
-    // e.stopPropagation();
   }
 
   eventTrap = (e) => {
-    // console.log(`TRAPPED - ${e.type}`  )
     e.stopPropagation();
-    // e.preventDefault();
   }
-
 
   getPosition = ()=>{
     return {
@@ -62,7 +57,7 @@ export default class Node extends React.Component {
    
     return (
       <Draggable cancel="#Canvas" position={this.getPosition()} onDrag={this.onDrag} onStart={this.onStart} onStop={this.onStop}>
-        <g ref={(node)=>this.node = node} id="Node" >
+        <g id="ssNode" >
           <polygon className={styles.Node} points="50 0 100 28.5 100 85.5 50 114 3.55271368e-14 85.5 3.55271368e-15 28.5"></polygon>
           <g transform={`translate(${50},${57})`}>
             <Icon icon={this.props.icon}  />
