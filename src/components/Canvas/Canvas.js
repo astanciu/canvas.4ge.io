@@ -10,7 +10,8 @@ import styles from './Canvas.module.css';
 class Canvas extends React.Component {
   state = {
     nodes: [
-      {id: '1', icon: 'eye', position: {x: 0, y:0}}
+      {id: '1', icon: 'eye', position: {x: 0, y:0}},
+      {id: '2', icon: 'user', position: {x: 200, y:0}}
     ],
     view: {
       width: window.innerWidth,
@@ -84,6 +85,21 @@ class Canvas extends React.Component {
   componentDidMount() {
     this.setCanvasSize();
     window.addEventListener('resize', this.setCanvasSize);
+
+    const node = ReactDOM.findDOMNode(this);
+    node.addEventListener('touchstart', this.onPanStart)
+    node.addEventListener('mousedown', this.onPanStart)
+    
+    node.addEventListener('touchmove', this.onPan)
+    node.addEventListener('mousemove', this.onPan)
+    
+    node.addEventListener('touchend', this.onPanEnd)
+    node.addEventListener('mouseup', this.onPanEnd)
+
+  }
+
+  foo = e => {
+    console.log(`${e.type}`)
   }
 
   componentWillUnmount() {
@@ -97,43 +113,39 @@ class Canvas extends React.Component {
 
   onPanStart = event => {
     this.friction = 1.0;
-    this.originalView = this.state.view;
+    this.panPrev = {x: event.pageX, y: event.pageY};
     this.panning = true;
-    // console.log('PanStart', event.srcEvent.type, event.target)
-  };
-
-  onPanEnd = event => {
-    // console.log('PanEnd', event.srcEvent.type, event.target)
-    if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
-    if (!this.panning) return;
-    this.originalView = null;
-    this.panning = false;
-    this.velocity = {
-      x: event.velocityX * 10,
-      y: event.velocityY * 10
-    };
-    this.friction = 1.0;
-    this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this));
   };
 
   onPan = event => {
-    console.log(`pan`, event.srcEvent.type);
-    if (!this.originalView) return;
-    const view = { ...this.state.view };
-    view.x = this.originalView.x + event.deltaX;
-    view.y = this.originalView.y + event.deltaY;
+    if (!this.panning) return;
 
+    const delta = {
+      x: event.pageX - this.panPrev.x,
+      y: event.pageY - this.panPrev.y
+    }
+   
+    const view = { ...this.state.view };
+    view.x += delta.x
+    view.y += delta.y
+    this.panPrev2 = this.panPrev
+    this.panPrev = {x: event.pageX, y: event.pageY};
     this.setState({ view });
   };
 
-  panCanvas = (delta, mouse) => {
-    const view = { ...this.state.view };
-    view.x += delta.x;
-    view.y += delta.y;
-    this.setState({
-      view,
-      mouseMoveStart: { x: mouse.screenX, y: mouse.screenY }
-    });
+  onPanEnd = event => {
+    if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+    if (!this.panning) return;
+    
+    this.panning = false;
+    if (!this.panPrev2) this.panPrev2 = this.panPrev || {x: event.pageX, y: event.pageY}
+    this.velocity = {
+      x: (event.pageX - this.panPrev2.x) * 1,
+      y: (event.pageY - this.panPrev2.y) * 1
+    };
+    this.panPrev = this.panPrev2 = null;
+    this.friction = 1.0;
+    this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this));
   };
 
   glideCanvas = () => {
@@ -161,12 +173,6 @@ class Canvas extends React.Component {
     this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this));
   };
 
-  test =(e)=> {
-    if (e.type==='pointermove' || e.type==='mousemove') return;
-    console.log('Test', e.type || e.srcEvent.type, e.target)
-    // debugger;
-  }
-
   updateNode = (node) => {
     const nodes = [...this.state.nodes]
     const index = findIndex(nodes, {id: node.id})
@@ -188,19 +194,6 @@ class Canvas extends React.Component {
           updateNode={this.updateNode}
         />)
     return (
-      <Hammer
-        onPan={this.onPan}
-        onPanStart={this.onPanStart}
-        onPanEnd={this.onPanEnd}
-        onPinch={this.onPinch}
-        options={{
-          domEvents: true,  
-          recognizers: {
-            pinch: { enable: true },
-            pan: { threshold: 1 }
-          }
-        }}
-      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={this.state.view.width}
@@ -213,7 +206,7 @@ class Canvas extends React.Component {
             {nodes}
           </g>
         </svg>
-      </Hammer>
+      
     );
   }
 }

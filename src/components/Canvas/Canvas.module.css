@@ -1,7 +1,7 @@
 .Canvas {
-
+  touch-action: manipulation;
   box-sizing: border-box;
-  
+    /* background: #aaa; */
   background: rgba(252,252,252,1);
   background: -moz-linear-gradient(top, rgba(252,252,252,1) 0%, rgba(246,246,246,1) 47%, rgba(240,240,240,1) 100%);
   background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(252,252,252,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(240,240,240,1)));
