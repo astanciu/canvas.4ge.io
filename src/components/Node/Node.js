@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from "react-dom";
-import Draggable from 'react-draggable';
-import Hammer from '../Util/Hammer.js';
 import styles from './Node.module.css';
 import Icon from '../Icon/Icon.js'
+import throttle from 'lodash/throttle';
 
 export default class Node extends React.Component {
   static displayName = 'Node'
@@ -11,51 +10,70 @@ export default class Node extends React.Component {
     position: {x: 0, y:0},
     icon: 'cog'
   };
-  state = {
-    draggin: false
-  }
+  
+  dragging = false
+  dragged=false
+  
   componentDidMount(){
-    const node = ReactDOM.findDOMNode(this);
-    node.addEventListener('touchstart', this.onDragStart)
-    node.addEventListener('mousedown', this.onDragStart)
     
-    node.addEventListener('touchmove', this.onDrag)
-    node.addEventListener('mousemove', this.onDrag)
+    this.domNode = ReactDOM.findDOMNode(this);
+
+    this.domNode.addEventListener('touchstart', this.onDragStart)
+    this.domNode.addEventListener('mousedown', this.onDragStart)
     
-    node.addEventListener('touchcancel', this.onCaonDragEndncel)
-    node.addEventListener('touchend', this.onDragEnd)
-    node.addEventListener('mouseup', this.onDragEnd)
+    this.domNode.addEventListener('touchmove', this.onDrag)
+    this.domNode.addEventListener('mousemove', this.onDrag)
+    
+    this.domNode.addEventListener('touchcancel', this.onCaonDragEndncel)
+    this.domNode.addEventListener('touchend', this.onDragEnd)
+    this.domNode.addEventListener('mouseup', this.onDragEnd)
+    
+    this.domNode.addEventListener('click', this.onClick)
+  }
+
+  onClick = (e) => {
+    console.log(`Click/Tap'ed ${this.props.node.id}`, e.type)
   }
 
   onDragStart = (e) => {
-    e.preventDefault();
+    // console.log(`DragStart`, e.type);
+    // e.preventDefault();
     e.stopPropagation();
-    console.log(`onDragStart`, e.type);
-    this.dragging = true;
-    this.dragPrev = {x: e.pageX, y: e.pageY}
+    this.mouseDown = true;
   }
 
-  onDrag = (e) => {
+  onDrag = throttle((e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!this.dragging) return;
+    if (!this.mouseDown) return;
+    this.dragging = true;
+    const obj = e.targetTouches ? e.targetTouches[0] : e
+    if (!this.dragPrev) this.dragPrev = {x: obj.pageX, y: obj.pageY}
     const delta = {
-      x: e.pageX - this.dragPrev.x,
-      y: e.pageY - this.dragPrev.y
+      x: obj.pageX - this.dragPrev.x,
+      y: obj.pageY - this.dragPrev.y
     }
-    this.dragPrev = {x: e.pageX, y: e.pageY}
+    this.dragPrev = {x: obj.pageX, y: obj.pageY}
     
     const node = {...this.props.node}
     node.position = {x: node.position.x + delta.x, y: node.position.y + delta.y}
-    console.log(`Node:${node.id} `, node.position, delta)
+
     this.props.updateNode(node)
-  }
+  },1000/60)
 
   onDragEnd = (e) => {
-    e.preventDefault(); 
+    // console.log(`touchEnd?`);
+    this.mouseDown = false;
     e.stopPropagation();
-    console.log('onDragEnd', e.type)
-    this.dragging = false;
+    e.preventDefault(); 
+    e.stopImmediatePropagation();
+    
+    if (this.dragging){
+      this.dragging = false;
+      this.dragPrev = null;
+      this.domNode.removeEventListener('click', this.onClick)
+      setTimeout(()=>this.domNode.addEventListener('click', this.onClick) ,10)
+    }
   }
 
   eventTrap = (e) => {

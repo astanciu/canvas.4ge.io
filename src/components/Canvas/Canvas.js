@@ -4,7 +4,6 @@ import debounce from 'lodash/debounce';
 import findIndex from 'lodash/findIndex'
 import Grid from '../Grid/Grid.js';
 import Node from '../Node/Node.js';
-import Hammer from '../Util/Hammer.js';
 import styles from './Canvas.module.css';
 
 class Canvas extends React.Component {
@@ -98,10 +97,6 @@ class Canvas extends React.Component {
 
   }
 
-  foo = e => {
-    console.log(`${e.type}`)
-  }
-
   componentWillUnmount() {
     window.removeEventListener('resize', this.setCanvasSize);
   }
@@ -112,6 +107,11 @@ class Canvas extends React.Component {
   };
 
   onPanStart = event => {
+    if (event.type !== "mousedown" && event.touches.length > 1){
+      event.preventDefault()
+      return;
+    }
+    // console.log(`Canvas PanStart: ${event.type}`)
     this.friction = 1.0;
     this.panPrev = {x: event.pageX, y: event.pageY};
     this.panning = true;
@@ -119,7 +119,7 @@ class Canvas extends React.Component {
 
   onPan = event => {
     if (!this.panning) return;
-
+    // console.log(`Canvas Panning: ${this.panning} | ${event.type} ${event.target}`);
     const delta = {
       x: event.pageX - this.panPrev.x,
       y: event.pageY - this.panPrev.y
