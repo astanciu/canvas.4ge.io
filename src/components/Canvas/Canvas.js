@@ -85,18 +85,23 @@ class Canvas extends React.Component {
     this.setCanvasSize();
     window.addEventListener('resize', this.setCanvasSize);
 
-    this.domNode = ReactDOM.findDOMNode(this);
-    this.domNode.addEventListener('touchstart', this.onPanStart)
-    this.domNode.addEventListener('mousedown', this.onPanStart)
+    // this.domNode = ReactDOM.findDOMNode(this);
+    this.domNode = window;
+    // this.domNode.addEventListener('touchstart', this.foo, true)
+    // this.domNode.addEventListener('mousedown', this.foo, true)
     
-    this.domNode.addEventListener('touchmove', this.onPan)
-    this.domNode.addEventListener('mousemove', this.onPan)
+    // this.domNode.addEventListener('touchmove', this.foo, true)
+    // this.domNode.addEventListener('mousemove', this.foo, true)
     
-    this.domNode.addEventListener('touchend', this.onPanEnd)
-    this.domNode.addEventListener('mouseup', this.onPanEnd)
+    // this.domNode.addEventListener('touchend', this.foo, true)
+    // this.domNode.addEventListener('mouseup', this.foo, true)
     
-    this.domNode.addEventListener('click', this.onClick)
+    // this.domNode.addEventListener('click', this.foo, true)
+  }
 
+  foo = (e) => {
+    console.log(`${e.target.tagName}:${e.eventPhase} - ${e.type === 'mousemove' ? 'move' : e.type}`)
+    e.preventDefault();
   }
 
   componentWillUnmount() {
@@ -239,7 +244,7 @@ class Canvas extends React.Component {
           className={styles.Canvas}
         >
           <g id="Canvas" transform={this.getTransform()}>
-            <Grid view={this.state.view} type="dot" />
+            <Grid id="Grid" view={this.state.view} type="dot" />
             {nodes}
           </g>
         </svg>

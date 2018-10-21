@@ -3,74 +3,49 @@ import ReactDOM from "react-dom";
 import styles from './Node.module.css';
 import Icon from '../Icon/Icon.js'
 import throttle from 'lodash/throttle';
+import EventManager from '../Util/EventManager.js';
 
 export default class Node extends React.Component {
   static displayName = 'Node'
   static defaultProps = {
     position: {x: 0, y:0},
-    icon: 'cog'
+    icon: 'cog',
+    gridSize: 25,
+    snapToGrid: false
   };
   
   dragging = false
   dragged=false
   
   componentDidMount(){
-    
     this.domNode = ReactDOM.findDOMNode(this);
+    this.em = new EventManager(this.domNode);
+    
+    this.em.onTap(this.onTap)
+    this.em.onMove(this.onMove)
+    if (this.props.snapToGrid) this.em.onMoveEnd(this.onMoveEnd)
 
-    this.domNode.addEventListener('touchstart', this.onDragStart)
-    this.domNode.addEventListener('mousedown', this.onDragStart)
-    
-    this.domNode.addEventListener('touchmove', this.onDrag)
-    this.domNode.addEventListener('mousemove', this.onDrag)
-    
-    this.domNode.addEventListener('touchcancel', this.onCaonDragEndncel)
-    this.domNode.addEventListener('touchend', this.onDragEnd)
-    this.domNode.addEventListener('mouseup', this.onDragEnd)
-    
-    this.domNode.addEventListener('click', this.onClick)
   }
 
-  onClick = (e) => {
-    // console.log(`Node ${this.props.node.id}`, e.type)
-    e.stopPropagation();
-    // e.preventDefault();
+  onTap = (e) => {
+    e.stopPropagation()
     const node = {...this.props.node}
-    
-
     this.props.selectNode(node)
   }
-
-  onDragStart = (e) => {
-    // console.log(`DragStart`, e.type);
-    // e.preventDefault();
-    e.stopPropagation();
-    this.mouseDown = true;
-  }
-
-  onDrag = throttle((e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (!this.mouseDown) return;
-    const obj = e.targetTouches ? e.targetTouches[0] : e
-    if (!this.dragPrev) this.dragPrev = {x: obj.pageX, y: obj.pageY}
-    const delta = {
-      x: obj.pageX - this.dragPrev.x,
-      y: obj.pageY - this.dragPrev.y
-    }
-    if (delta.x === 0 && delta.y === 0) return;
-    this.dragging = true;
-    // console.log('Drag', delta, e.type)
-    this.dragPrev = {x: obj.pageX, y: obj.pageY}
-    
+  
+  onMove = (e) => {
+    e.stopPropagation()
     const node = {...this.props.node}
-    node.position = {x: node.position.x + delta.x, y: node.position.y + delta.y}
-
+    node.position = {x: node.position.x + e.detail.delta.x, y: node.position.y + e.detail.delta.y}
     this.props.updateNode(node)
-  },1000/60)
-
+  }
+  
+  onMoveEnd = e => {
+    this.snapToGrid()
+  }
+ 
   snapToGrid = () => {
-    const grid = 25;
+    const grid = this.props.gridSize;
     
     const node = {...this.props.node}
 
@@ -96,29 +71,6 @@ export default class Node extends React.Component {
 
     this.props.updateNode(node)
     requestAnimationFrame(this.snapToGrid)
-  }
-
-  onDragEnd = (e) => {
-    // console.log(`touchEnd?`);
-    this.mouseDown = false;
-    e.stopPropagation();
-    e.preventDefault(); 
-    e.stopImmediatePropagation();
-    
-    if (this.dragging){
-      // console.log('DragEnd', e.type)
-      this.dragging = false;
-      this.dragPrev = null;
-
-      this.snapToGrid()
-
-      this.domNode.removeEventListener('click', this.onClick)
-      setTimeout(()=>this.domNode.addEventListener('click', this.onClick) ,10)
-    }
-  }
-
-  eventTrap = (e) => {
-    e.stopPropagation();
   }
 
   getTransform = ()=>{
