@@ -32,7 +32,13 @@ export default class Node extends React.Component {
   }
 
   onClick = (e) => {
-    console.log(`Click/Tap'ed ${this.props.node.id}`, e.type)
+    // console.log(`Node ${this.props.node.id}`, e.type)
+    e.stopPropagation();
+    // e.preventDefault();
+    const node = {...this.props.node}
+    
+
+    this.props.selectNode(node)
   }
 
   onDragStart = (e) => {
@@ -46,13 +52,15 @@ export default class Node extends React.Component {
     e.stopPropagation();
     e.preventDefault();
     if (!this.mouseDown) return;
-    this.dragging = true;
     const obj = e.targetTouches ? e.targetTouches[0] : e
     if (!this.dragPrev) this.dragPrev = {x: obj.pageX, y: obj.pageY}
     const delta = {
       x: obj.pageX - this.dragPrev.x,
       y: obj.pageY - this.dragPrev.y
     }
+    if (delta.x === 0 && delta.y === 0) return;
+    this.dragging = true;
+    // console.log('Drag', delta, e.type)
     this.dragPrev = {x: obj.pageX, y: obj.pageY}
     
     const node = {...this.props.node}
@@ -60,6 +68,35 @@ export default class Node extends React.Component {
 
     this.props.updateNode(node)
   },1000/60)
+
+  snapToGrid = () => {
+    const grid = 25;
+    
+    const node = {...this.props.node}
+
+    const target =  {
+      x: Math.round(node.position.x / grid) * grid,
+      y: Math.round(node.position.y / grid) * grid
+    }
+    
+    const delta = {
+      x: target.x - node.position.x,
+      y: target.y - node.position.y,
+    }
+
+    if (delta.x === 0 && delta.y === 0) return;
+    
+    node.position = {
+      x: node.position.x + delta.x * 0.5,
+      y: node.position.y + delta.y * 0.5
+    }
+    
+    if (Math.abs(delta.x) < 0.05) node.position.x = target.x
+    if (Math.abs(delta.y) < 0.05) node.position.y = target.y
+
+    this.props.updateNode(node)
+    requestAnimationFrame(this.snapToGrid)
+  }
 
   onDragEnd = (e) => {
     // console.log(`touchEnd?`);
@@ -69,8 +106,12 @@ export default class Node extends React.Component {
     e.stopImmediatePropagation();
     
     if (this.dragging){
+      // console.log('DragEnd', e.type)
       this.dragging = false;
       this.dragPrev = null;
+
+      this.snapToGrid()
+
       this.domNode.removeEventListener('click', this.onClick)
       setTimeout(()=>this.domNode.addEventListener('click', this.onClick) ,10)
     }
@@ -90,10 +131,12 @@ export default class Node extends React.Component {
   }
 
   render() {
-    
+    let nodeClass = styles.Node;
+    if (this.props.node.selected) nodeClass = styles.NodeSelected
+
     return (
-        <g id="ssNode" transform={this.getTransform()}>
-          <polygon className={styles.Node} points="50 0 100 28.5 100 85.5 50 114 3.55271368e-14 85.5 3.55271368e-15 28.5"></polygon>
+        <g id="Node" transform={this.getTransform()}>
+          <polygon className={nodeClass} points="50 0 100 28.5 100 85.5 50 114 3.55271368e-14 85.5 3.55271368e-15 28.5"></polygon>
           <g transform={`translate(${50},${57})`}>
             <Icon icon={this.props.node.icon}  />
             {this.props.debug ? 

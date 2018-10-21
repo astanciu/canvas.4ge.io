@@ -18,12 +18,12 @@ export default ({view}) => {
     </React.Fragment>
 
   return (
-  <g id="Grid" className="grid">
-   <defs>
-      {gridPattern}
-    </defs>
-    <rect x={-1* SIZE} y={-1* SIZE} width={SIZE * 2} height={SIZE * 2} fill={`url(#bigGrid)`} />
-  </g>
+    <g id="Grid" className="grid">
+    <defs>
+        {gridPattern}
+      </defs>
+      <rect x={-1* SIZE} y={-1* SIZE} width={SIZE * 2} height={SIZE * 2} fill={`url(#bigGrid)`} />
+    </g>
   )
 }
 

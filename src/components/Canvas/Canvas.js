@@ -9,7 +9,7 @@ import styles from './Canvas.module.css';
 class Canvas extends React.Component {
   state = {
     nodes: [
-      {id: '1', icon: 'eye', position: {x: 0, y:0}},
+      {id: '1', selected:true, icon: 'eye', position: {x: 0, y:0}},
       {id: '2', icon: 'user', position: {x: 200, y:0}}
     ],
     view: {
@@ -85,15 +85,17 @@ class Canvas extends React.Component {
     this.setCanvasSize();
     window.addEventListener('resize', this.setCanvasSize);
 
-    const node = ReactDOM.findDOMNode(this);
-    node.addEventListener('touchstart', this.onPanStart)
-    node.addEventListener('mousedown', this.onPanStart)
+    this.domNode = ReactDOM.findDOMNode(this);
+    this.domNode.addEventListener('touchstart', this.onPanStart)
+    this.domNode.addEventListener('mousedown', this.onPanStart)
     
-    node.addEventListener('touchmove', this.onPan)
-    node.addEventListener('mousemove', this.onPan)
+    this.domNode.addEventListener('touchmove', this.onPan)
+    this.domNode.addEventListener('mousemove', this.onPan)
     
-    node.addEventListener('touchend', this.onPanEnd)
-    node.addEventListener('mouseup', this.onPanEnd)
+    this.domNode.addEventListener('touchend', this.onPanEnd)
+    this.domNode.addEventListener('mouseup', this.onPanEnd)
+    
+    this.domNode.addEventListener('click', this.onClick)
 
   }
 
@@ -106,20 +108,28 @@ class Canvas extends React.Component {
     return `matrix(${view.scale},0,0,${view.scale},${view.x},${view.y})`;
   };
 
+  onClick = e => {
+    console.log('Canvas', e.type, e.target, e)
+    // if (e.target !== this.bg) return;
+    this.selectNode(null)
+  }
   onPanStart = event => {
+    // console.log('Canvas', event.type)
     if (event.type !== "mousedown" && event.touches.length > 1){
       event.preventDefault()
       return;
     }
     // console.log(`Canvas PanStart: ${event.type}`)
     this.friction = 1.0;
-    this.panPrev = {x: event.pageX, y: event.pageY};
-    this.panning = true;
+    this.mouseDown = true;
+    
   };
 
   onPan = event => {
-    if (!this.panning) return;
+    if (!this.mouseDown) return;
+    this.panning = true;
     // console.log(`Canvas Panning: ${this.panning} | ${event.type} ${event.target}`);
+    this.panPrev = this.panPrev || {x: event.pageX, y: event.pageY};
     const delta = {
       x: event.pageX - this.panPrev.x,
       y: event.pageY - this.panPrev.y
@@ -134,10 +144,13 @@ class Canvas extends React.Component {
   };
 
   onPanEnd = event => {
+    // console.log('Canvas', event.type)
+    this.mouseDown = false;
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
     if (!this.panning) return;
     
     this.panning = false;
+    
     if (!this.panPrev2) this.panPrev2 = this.panPrev || {x: event.pageX, y: event.pageY}
     this.velocity = {
       x: (event.pageX - this.panPrev2.x) * 1,
@@ -146,6 +159,9 @@ class Canvas extends React.Component {
     this.panPrev = this.panPrev2 = null;
     this.friction = 1.0;
     this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this));
+
+    this.domNode.removeEventListener('click', this.onClick)
+    setTimeout(()=>this.domNode.addEventListener('click', this.onClick) ,10)
   };
 
   glideCanvas = () => {
@@ -185,6 +201,26 @@ class Canvas extends React.Component {
     this.setState({nodes})
   }
 
+  selectNode = (node) => {
+    if (node === null || !node){
+      const node = this.state.nodes.find(n => n.selected)
+      if (!node) return;
+      delete node.selected
+      this.updateNode(node)
+      return;
+    }
+
+    const currentlySelected = this.state.nodes.find(n => n.selected)
+    if (currentlySelected){
+      currentlySelected.selected = false
+      this.updateNode(currentlySelected)
+      if (currentlySelected.id === node.id) return;
+    }
+
+    node.selected = true
+    this.updateNode(node)
+  }
+
   render() {
       //
       const nodes = this.state.nodes
@@ -192,6 +228,7 @@ class Canvas extends React.Component {
           key={node.id} 
           node={node}
           updateNode={this.updateNode}
+          selectNode={this.selectNode}
         />)
     return (
         <svg
