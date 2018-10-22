@@ -5,6 +5,7 @@ import findIndex from 'lodash/findIndex'
 import Grid from '../Grid/Grid.js';
 import Node from '../Node/Node.js';
 import styles from './Canvas.module.css';
+import EventManager from '../Util/EventManager.js';
 
 class Canvas extends React.Component {
   state = {
@@ -84,19 +85,11 @@ class Canvas extends React.Component {
   componentDidMount() {
     this.setCanvasSize();
     window.addEventListener('resize', this.setCanvasSize);
-
-    // this.domNode = ReactDOM.findDOMNode(this);
-    this.domNode = window;
-    // this.domNode.addEventListener('touchstart', this.foo, true)
-    // this.domNode.addEventListener('mousedown', this.foo, true)
-    
-    // this.domNode.addEventListener('touchmove', this.foo, true)
-    // this.domNode.addEventListener('mousemove', this.foo, true)
-    
-    // this.domNode.addEventListener('touchend', this.foo, true)
-    // this.domNode.addEventListener('mouseup', this.foo, true)
-    
-    // this.domNode.addEventListener('click', this.foo, true)
+    this.domNode = ReactDOM.findDOMNode(this);
+    this.em = new EventManager(this.domNode);
+    this.em.onTap(this._onTap)
+    this.em.onMove(this._onMove)
+    this.em.onMoveEnd(this._onMoveEnd)
   }
 
   foo = (e) => {
@@ -113,62 +106,28 @@ class Canvas extends React.Component {
     return `matrix(${view.scale},0,0,${view.scale},${view.x},${view.y})`;
   };
 
-  onClick = e => {
-    console.log('Canvas', e.type, e.target, e)
-    // if (e.target !== this.bg) return;
+  _onTap = e => {
     this.selectNode(null)
   }
-  onPanStart = event => {
-    // console.log('Canvas', event.type)
-    if (event.type !== "mousedown" && event.touches.length > 1){
-      event.preventDefault()
-      return;
-    }
-    // console.log(`Canvas PanStart: ${event.type}`)
-    this.friction = 1.0;
-    this.mouseDown = true;
-    
-  };
 
-  onPan = event => {
-    if (!this.mouseDown) return;
-    this.panning = true;
-    // console.log(`Canvas Panning: ${this.panning} | ${event.type} ${event.target}`);
-    this.panPrev = this.panPrev || {x: event.pageX, y: event.pageY};
-    const delta = {
-      x: event.pageX - this.panPrev.x,
-      y: event.pageY - this.panPrev.y
-    }
-   
+  _onMove = e => {
     const view = { ...this.state.view };
-    view.x += delta.x
-    view.y += delta.y
-    this.panPrev2 = this.panPrev
-    this.panPrev = {x: event.pageX, y: event.pageY};
+    view.x += e.detail.delta.x
+    view.y += e.detail.delta.y
     this.setState({ view });
-  };
+  }
 
-  onPanEnd = event => {
-    // console.log('Canvas', event.type)
-    this.mouseDown = false;
+  _onMoveEnd = e => {
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
-    if (!this.panning) return;
-    
-    this.panning = false;
-    
-    if (!this.panPrev2) this.panPrev2 = this.panPrev || {x: event.pageX, y: event.pageY}
-    this.velocity = {
-      x: (event.pageX - this.panPrev2.x) * 1,
-      y: (event.pageY - this.panPrev2.y) * 1
-    };
-    this.panPrev = this.panPrev2 = null;
-    this.friction = 1.0;
+    this.velocity = e.detail.delta;
+
+    this.friction = .85;
     this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this));
 
     this.domNode.removeEventListener('click', this.onClick)
     setTimeout(()=>this.domNode.addEventListener('click', this.onClick) ,10)
-  };
-
+  }
+  
   glideCanvas = () => {
     this.friction -= 0.01;
     if (this.friction < 0.01) this.friction = 0.01;

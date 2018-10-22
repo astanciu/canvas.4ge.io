@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from "react-dom";
 import styles from './Node.module.css';
 import Icon from '../Icon/Icon.js'
-import throttle from 'lodash/throttle';
 import EventManager from '../Util/EventManager.js';
 
 export default class Node extends React.Component {
@@ -19,28 +18,26 @@ export default class Node extends React.Component {
   
   componentDidMount(){
     this.domNode = ReactDOM.findDOMNode(this);
-    this.em = new EventManager(this.domNode);
-    
-    this.em.onTap(this.onTap)
-    this.em.onMove(this.onMove)
-    if (this.props.snapToGrid) this.em.onMoveEnd(this.onMoveEnd)
-
+    this.em = new EventManager(this.domNode, false);
+    this.em.onTap(this._onTap)
+    this.em.onMove(this._onMove)
+    if (this.props.snapToGrid) this.em.onMoveEnd(this._onMoveEnd)
   }
 
-  onTap = (e) => {
+  _onTap = (e) => {
     e.stopPropagation()
     const node = {...this.props.node}
     this.props.selectNode(node)
   }
   
-  onMove = (e) => {
+  _onMove = (e) => {
     e.stopPropagation()
     const node = {...this.props.node}
     node.position = {x: node.position.x + e.detail.delta.x, y: node.position.y + e.detail.delta.y}
     this.props.updateNode(node)
   }
   
-  onMoveEnd = e => {
+  _onMoveEnd = e => {
     this.snapToGrid()
   }
  
@@ -88,7 +85,7 @@ export default class Node extends React.Component {
 
     return (
         <g id="Node" transform={this.getTransform()}>
-          <polygon className={nodeClass} points="50 0 100 28.5 100 85.5 50 114 3.55271368e-14 85.5 3.55271368e-15 28.5"></polygon>
+          <polygon id={this.props.node.id} className={nodeClass} points="50 0 100 28.5 100 85.5 50 114 3.55271368e-14 85.5 3.55271368e-15 28.5"></polygon>
           <g transform={`translate(${50},${57})`}>
             <Icon icon={this.props.node.icon}  />
             {this.props.debug ? 
