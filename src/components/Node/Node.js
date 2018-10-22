@@ -34,7 +34,11 @@ export default class Node extends React.Component {
   _onMove = (e) => {
     e.stopPropagation()
     const node = {...this.props.node}
-    node.position = {x: node.position.x + e.detail.delta.x, y: node.position.y + e.detail.delta.y}
+    const scaleFactor = this.props.canvasView && this.props.canvasView.scale || 1;
+    node.position = {
+      x: node.position.x + (e.detail.delta.x * 1/scaleFactor), 
+      y: node.position.y + (e.detail.delta.y * 1/scaleFactor)
+    }
     this.props.updateNode(node)
   }
   

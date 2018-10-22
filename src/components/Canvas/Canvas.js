@@ -185,6 +185,7 @@ class Canvas extends React.Component {
           updateNode={this.updateNode}
           selectNode={this.selectNode}
           unselected={somethingSelected}
+          canvasView={this.state.view}
         />)
     return (
         <svg
