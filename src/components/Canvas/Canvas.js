@@ -10,8 +10,11 @@ import EventManager from '../Util/EventManager.js';
 class Canvas extends React.Component {
   state = {
     nodes: [
-      {id: '1', selected:true, icon: 'eye', position: {x: 0, y:0}},
-      {id: '2', icon: 'user', position: {x: 200, y:0}}
+      {id: '1', icon: 'eye', position: {x: 0, y:0}},
+      {id: '2', icon: 'user', position: {x: 200, y:0}},
+      {id: '3', icon: 'home', position: {x: -200, y:0}},
+      {id: '4', icon: 'jedi', position: {x: 0, y:200}},
+     {id: '5', icon: 'network-wired', position: {x: 0, y:-200}},
     ],
     view: {
       width: window.innerWidth,
@@ -186,13 +189,14 @@ class Canvas extends React.Component {
   }
 
   render() {
-      //
+      const somethingSelected = this.state.nodes.find(n => n.selected)
       const nodes = this.state.nodes
       .map(node => <Node 
           key={node.id} 
           node={node}
           updateNode={this.updateNode}
           selectNode={this.selectNode}
+          unselected={somethingSelected}
         />)
     return (
         <svg
