@@ -1,14 +1,17 @@
 import throttle from 'lodash/throttle';
+import { listen, multitouch } from 'popmotion';
+
 
 export default class EventManager {
   constructor(element, debug) {
     this.el = element;
-    this.name = element.name || element.id || element.tagName;
+    this.name = element.id || element.tagName;
     this.debug = debug;
     this.handlers = {
       tap: [],
       move: [],
-      moveEnd: []
+      moveEnd: [],
+      pinch: []
     };
     this.isClick = false;
     this.isDragging = false;
@@ -26,6 +29,35 @@ export default class EventManager {
       this.el.addEventListener('mousedown', this._mousedown.bind(this));
     }
   };
+
+  setupPinch = () => {
+    listen(this.el, 'touchstart')
+      .start((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+       
+        multitouch({ scale: this.scale || 1, preventDefault: true})
+        .filter(({ touches }) => touches.length === 2)
+        .start(({ touches, scale, rotate }) => {
+          this.zooming = true;
+          const center = {
+            x: (touches[0].x + touches[1].x) / 2,
+            y: (touches[0].y + touches[1].y) / 2,
+          }
+
+          this.scale = scale;
+          const customEvent = new CustomEvent('move', {
+            detail: {
+              x: center.x,
+              y: center.y,
+              scale
+            }
+          });
+      
+          this.callHandler('pinch', customEvent)    
+        });
+      });
+  }
 
   debugEvent = e => {
     if (this.debug) console.log(`${this.name} : ${e.type}`, e);
@@ -78,6 +110,7 @@ export default class EventManager {
   _mousemove = throttle(rawEvent => {
     rawEvent.preventDefault();
     rawEvent.stopPropagation();
+    if (rawEvent.touches && rawEvent.touches.length > 1) return
     
     if (!this.mouseDown) return;
 
@@ -187,4 +220,9 @@ export default class EventManager {
   onMoveEnd = fn => {
     this.addHandler('moveEnd', fn);
   };
+
+  onPinch = fn => {
+    this.setupPinch()
+    this.addHandler('pinch', fn)
+  }
 }

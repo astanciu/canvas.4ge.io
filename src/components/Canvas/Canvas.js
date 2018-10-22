@@ -38,18 +38,6 @@ class Canvas extends React.Component {
     this.setState({ view });
   }, 50);
 
-  onPinch = event => {
-    let size = event.distance;
-    if (event.additionalEvent === 'pinchout') size *= -1.55;
-    if (event.additionalEvent === 'pinchin') size *= 0.7;
-    let location = {
-      x: event.center.x,
-      y: event.center.y
-    };
-
-    this.zoomCanvas(size, location);
-  };
-
   onWheel = event => {
     let size = event.deltaY ? event.deltaY : 0 - event.wheelDeltaY;
     let location = {
@@ -60,18 +48,15 @@ class Canvas extends React.Component {
     this.zoomCanvas(size, location);
   };
 
-  zoomCanvas = (size, location) => {
+  setScale = (scale, location) => {
     const view = { ...this.state.view };
 
-    if (isNaN(size) || size === 0) return;
-
-    let scale = view.scale + size / -500;
-    if (scale < this.MIN_SCALE) {
+    if (scale < this.MIN_SCALE ) {
       scale = this.MIN_SCALE;
     } else if (scale > this.MAX_SCALE) {
       scale = this.MAX_SCALE;
     }
-
+    
     const xFactor = scale / view.scale - 1; //trial & error
     const posDelta = {
       x: location.x - view.x,
@@ -89,15 +74,12 @@ class Canvas extends React.Component {
     this.setCanvasSize();
     window.addEventListener('resize', this.setCanvasSize);
     this.domNode = ReactDOM.findDOMNode(this);
-    this.em = new EventManager(this.domNode);
+
+    this.em = new EventManager(this.domNode, false);
     this.em.onTap(this._onTap)
     this.em.onMove(this._onMove)
     this.em.onMoveEnd(this._onMoveEnd)
-  }
-
-  foo = (e) => {
-    console.log(`${e.target.tagName}:${e.eventPhase} - ${e.type === 'mousemove' ? 'move' : e.type}`)
-    e.preventDefault();
+    this.em.onPinch(this._onPinch)
   }
 
   componentWillUnmount() {
@@ -111,6 +93,11 @@ class Canvas extends React.Component {
 
   _onTap = e => {
     this.selectNode(null)
+  }
+
+  _onPinch = (e) => {
+    const center = {x: e.detail.x, y: e.detail.y}
+    this.setScale(e.detail.scale, center)
   }
 
   _onMove = e => {
@@ -205,6 +192,7 @@ class Canvas extends React.Component {
           height={this.state.view.height}
           onWheel={this.onWheel}
           className={styles.Canvas}
+          id='svgCanvas'
         >
           <g id="Canvas" transform={this.getTransform()}>
             <Grid id="Grid" view={this.state.view} type="dot" />

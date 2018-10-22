@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import styles from './Node.module.css';
 import Icon from '../Icon/Icon.js'
 import EventManager from '../Util/EventManager.js';
+import { physics, decay, tween, easing } from 'popmotion';
 
 export default class Node extends React.Component {
   static displayName = 'Node'
