@@ -31,22 +31,28 @@ class Canvas extends React.Component {
   velocity = { x: 0, y: 0 };
   friction = 1;
 
+  componentDidMount() {
+    this.setCanvasSize();
+    window.addEventListener('resize', this.setCanvasSize);
+    this.domNode = ReactDOM.findDOMNode(this);
+
+    this.em = new EventManager(this.domNode, false);
+    this.em.onTap(this._onTap)
+    this.em.onMove(this._onMove)
+    this.em.onMoveEnd(this._onMoveEnd)
+    this.em.onPinch(this._onPinch)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.setCanvasSize);
+  }
+
   setCanvasSize = debounce(() => {
     const view = { ...this.state.view };
     view.width = window.innerWidth;
     view.height = window.innerHeight;
     this.setState({ view });
   }, 50);
-
-  onWheel = event => {
-    let size = event.deltaY ? event.deltaY : 0 - event.wheelDeltaY;
-    let location = {
-      x: event.clientX,
-      y: event.clientY
-    };
-
-    this.zoomCanvas(size, location);
-  };
 
   setScale = (scale, location) => {
     const view = { ...this.state.view };
@@ -70,25 +76,20 @@ class Canvas extends React.Component {
     this.setState({ view });
   };
 
-  componentDidMount() {
-    this.setCanvasSize();
-    window.addEventListener('resize', this.setCanvasSize);
-    this.domNode = ReactDOM.findDOMNode(this);
-
-    this.em = new EventManager(this.domNode, false);
-    this.em.onTap(this._onTap)
-    this.em.onMove(this._onMove)
-    this.em.onMoveEnd(this._onMoveEnd)
-    this.em.onPinch(this._onPinch)
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.setCanvasSize);
-  }
-
   getTransform = () => {
     const view = this.state.view;
     return `matrix(${view.scale},0,0,${view.scale},${view.x},${view.y})`;
+  };
+
+  _onWheel = event => {
+    let size = event.deltaY ? event.deltaY : 0 - event.wheelDeltaY;
+    const scale = this.state.view.scale + size/200
+    let center = {
+      x: event.clientX,
+      y: event.clientY
+    };
+
+    this.setScale(scale, center)
   };
 
   _onTap = e => {
@@ -190,7 +191,7 @@ class Canvas extends React.Component {
           xmlns="http://www.w3.org/2000/svg"
           width={this.state.view.width}
           height={this.state.view.height}
-          onWheel={this.onWheel}
+          onWheel={this._onWheel}
           className={styles.Canvas}
           id='svgCanvas'
         >
