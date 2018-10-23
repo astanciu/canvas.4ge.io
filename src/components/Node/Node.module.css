@@ -9,6 +9,10 @@
   cursor: pointer;
 }
 
+.NodeIconUnSelected {
+  fill: #afc0c9;
+}
+
 .NodeSelected {
   composes: Node;
   stroke: #b0cfe9;
@@ -17,6 +21,6 @@
 
 .NodeUnselected {
   composes: Node;
-  stroke: #b7cee0;
+  stroke: #e9e9e9;
   fill: #e9e9e9;
 }
