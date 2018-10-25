@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import styles from './Node.module.css';
 import Icon from '../Icon/Icon.js';
 import EventManager from '../Util/EventManager.js';
-import { physics, spring } from 'popmotion';
 
 export default class Node extends React.Component {
   static displayName = 'Node';
@@ -14,14 +13,20 @@ export default class Node extends React.Component {
     snapToGrid: true
   };
   
+  width = 100;
+  height = 100;
+  
   dragging = false;
   dragged = false;
 
   componentDidMount() {
     this.domNode = ReactDOM.findDOMNode(this);
+    this.bb = this.domNode.getBBox();
+    
     this.em = new EventManager(this.domNode, false);
     this.em.onTap(this._onTap);
     this.em.onMove(this._onMove);
+
     if (this.props.snapToGrid) this.em.onMoveEnd(this._onMoveEnd);
   }
 
@@ -49,11 +54,9 @@ export default class Node extends React.Component {
   };
 
   snapToGrid = () => {
-    const grid = this.props.gridSize;
-
     const node = { ...this.props.node };
-    const hgrid = 100 * .5;
-    const vgrid = 114 * .75
+    const hgrid = 130 * .5;
+    const vgrid = 140 * .75
     const target = {
       x: Math.round(node.position.x / hgrid) * hgrid,
       y: Math.round(node.position.y / vgrid) * vgrid
@@ -65,64 +68,40 @@ export default class Node extends React.Component {
 
   getTransform = () => {
     const loc = {
-      x: this.props.node.position.x - 50,
-      y: this.props.node.position.y - 57
+      x: this.props.node.position.x ,
+      y: this.props.node.position.y ,
     };
-
     return `translate(${loc.x},${loc.y})`;
+    
   };
 
+
   render() {
-    let nodeClass = styles.Node;
-    let nodeIconClass = styles.NodeIcon
+    let nodeClass = styles.normal;
+    let nodeOutline = styles.normalOutline
+    let nodeIconClass = styles.normalIcon
     if (this.props.unselected) {
-      nodeClass = styles.NodeUnselected;
-      nodeIconClass = styles.NodeIconUnSelected
+      nodeClass = styles.unselected;
+      nodeOutline = styles.unselectedOutline
+      nodeIconClass = styles.unselectedIcon
     }
     if (this.props.node.selected) {
-      nodeClass = styles.NodeSelected;
-      nodeIconClass = styles.NodeIcon
+      nodeClass = styles.selected;
+      nodeOutline = styles.selectedOutline
+      nodeIconClass = styles.selectedIcon
     }
 
     return (
       <g id="Node" transform={this.getTransform()}>
-        <defs />
-        {this.props.node.selected ? null : null}
-        <polygon
-          id={this.props.node.id}
-          className={nodeClass}
-          points="50 0 100 28.5 100 85.5 50 114 3.55271368e-14 85.5 3.55271368e-15 28.5"
-        />
-        <g transform={`translate(${50},${57})`}>
+        <g id="Hexagons" transform="translate(-50.000000, -55.000000)">
+            <polygon className={nodeClass} points="50 5 93.3012702 30 93.3012702 80 50 105 6.69872981 80 6.69872981 30"></polygon>
+            <polygon className={nodeOutline} strokeWidth="2" points="50 0 97.6313972 27.5 97.6313972 82.5 50 110 2.36860279 82.5 2.36860279 27.5"></polygon>
+            {this.props.node.selected ? 
+              <polygon className={styles.selectedHighlight} transform="translate(-28.000000, -34.000000)"  points="77.5 0 154.143248 44.25 154.143248 132.75 77.5 177 0.856751765 132.75 0.856751765 44.25"></polygon>
+            : null}
+        </g>
+        <g transform={`translate(${0},${0})`}>
           <Icon icon={this.props.node.icon} className={nodeIconClass} />
-          {this.props.debug ? (
-            <React.Fragment>
-              <line
-                x1="0"
-                y1="-600"
-                x2="0"
-                y2="600"
-                strokeWidth="1"
-                stroke="red"
-              />
-              <line
-                x1="-600"
-                y1="00"
-                x2="600"
-                y2="0"
-                strokeWidth="1"
-                stroke="red"
-              />
-              <circle
-                cx="0"
-                cy="0"
-                r="2"
-                stroke="green"
-                strokeWidth="0"
-                fill="green"
-              />
-            </React.Fragment>
-          ) : null}
         </g>
       </g>
     );

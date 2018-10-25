@@ -1,26 +1,57 @@
-.Node {
-  fill: #F5F7F9;
-  stroke: #95BAD8;
+/* Normal  */
+.normal {
+  fill: #B9CDE4;
+  cursor: pointer;
+  stroke: none;
+}
+
+.normalOutline {
+  fill: none;
+  stroke: #8998AA;
   stroke-width: 2px;
+}
+
+.normalIcon {
+  fill: #7F97B2;
+  stroke: none;
   cursor: pointer;
 }
-.NodeIcon {
-  fill: #4f7790;
-  cursor: pointer;
+
+/* Selected */
+.selected {
+  composes: normal;
+  fill: #A9C2E0;
+  stroke: none;
 }
 
-.NodeIconUnSelected {
-  fill: #afc0c9;
+.selectedOutline {
+  composes: normalOutline;
+  stroke: #899FBA; 
 }
 
-.NodeSelected {
-  composes: Node;
-  stroke: #b0cfe9;
-  fill: #f9f9f9;
+.selectedIcon {
+  composes: normalIcon;
+  fill: #6C88A8;
 }
 
-.NodeUnselected {
-  composes: Node;
-  stroke: #e9e9e9;
-  fill: #e9e9e9;
+.selectedHighlight {
+  fill: #C4EBFF;
+  opacity: 0.0514605978;
+}
+
+/* UnSelected */
+.unselected {
+  composes: normal;
+  fill: #768CA6;
+  stroke: none;
+}
+
+.unselectedOutline {
+  composes: normalOutline;
+  stroke: #69778C; 
+}
+
+.unselectedIcon {
+  composes: normalIcon;
+  fill: #596A84;
 }

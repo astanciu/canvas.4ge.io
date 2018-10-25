@@ -1,7 +1,7 @@
 import React from 'react';
-import ReactDOM from "react-dom";
+import ReactDOM from 'react-dom';
 import debounce from 'lodash/debounce';
-import findIndex from 'lodash/findIndex'
+import findIndex from 'lodash/findIndex';
 import Grid from '../Grid/Grid.js';
 import Node from '../Node/Node.js';
 import styles from './Canvas.module.css';
@@ -10,11 +10,11 @@ import EventManager from '../Util/EventManager.js';
 class Canvas extends React.Component {
   state = {
     nodes: [
-      {id: '1', icon: 'eye', position: {x: 0, y:0}},
-      {id: '2', icon: 'user', position: {x: 200, y:0}},
-      {id: '3', icon: 'home', position: {x: -200, y:0}},
-      {id: '4', icon: 'jedi', position: {x: 0, y:200}},
-     {id: '5', icon: 'network-wired', position: {x: 0, y:-200}},
+      { id: '4', icon: 'jedi', position: { x: -65, y: -105 } },
+      { id: '1', icon: 'eye', position: { x: 0, y: 0 } },
+      { id: '3', icon: 'home', position: { x: -130, y: 0 } },
+      { id: '2', icon: 'user', position: { x: 110, y: 0 } },
+      { id: '5', icon: 'network-wired', position: { x: -65, y: 105 } }
     ],
     view: {
       width: window.innerWidth,
@@ -37,10 +37,10 @@ class Canvas extends React.Component {
     this.domNode = ReactDOM.findDOMNode(this);
 
     this.em = new EventManager(this.domNode, false);
-    this.em.onTap(this._onTap)
-    this.em.onMove(this._onMove)
-    this.em.onMoveEnd(this._onMoveEnd)
-    this.em.onPinch(this._onPinch)
+    this.em.onTap(this._onTap);
+    this.em.onMove(this._onMove);
+    this.em.onMoveEnd(this._onMoveEnd);
+    this.em.onPinch(this._onPinch);
   }
 
   componentWillUnmount() {
@@ -57,12 +57,12 @@ class Canvas extends React.Component {
   setScale = (scale, location) => {
     const view = { ...this.state.view };
 
-    if (scale < this.MIN_SCALE ) {
+    if (scale < this.MIN_SCALE) {
       scale = this.MIN_SCALE;
     } else if (scale > this.MAX_SCALE) {
       scale = this.MAX_SCALE;
     }
-    
+
     const xFactor = scale / view.scale - 1; //trial & error
     const posDelta = {
       x: location.x - view.x,
@@ -83,42 +83,44 @@ class Canvas extends React.Component {
 
   _onWheel = event => {
     let size = event.deltaY ? event.deltaY : 0 - event.wheelDeltaY;
-    const scale = this.state.view.scale + size/200
+    if (isNaN(size) || !size) return;
+
+    const scale = this.state.view.scale + size / 200;
     let center = {
       x: event.clientX,
       y: event.clientY
     };
 
-    this.setScale(scale, center)
+    this.setScale(scale, center);
   };
 
   _onTap = e => {
-    this.selectNode(null)
-  }
+    this.selectNode(null);
+  };
 
-  _onPinch = (e) => {
-    const center = {x: e.detail.x, y: e.detail.y}
-    this.setScale(e.detail.scale, center)
-  }
+  _onPinch = e => {
+    const center = { x: e.detail.x, y: e.detail.y };
+    this.setScale(e.detail.scale, center);
+  };
 
   _onMove = e => {
     const view = { ...this.state.view };
-    view.x += e.detail.delta.x
-    view.y += e.detail.delta.y
+    view.x += e.detail.delta.x;
+    view.y += e.detail.delta.y;
     this.setState({ view });
-  }
+  };
 
   _onMoveEnd = e => {
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
     this.velocity = e.detail.delta;
 
-    this.friction = .85;
+    this.friction = 0.85;
     this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this));
 
-    this.domNode.removeEventListener('click', this.onClick)
-    setTimeout(()=>this.domNode.addEventListener('click', this.onClick) ,10)
-  }
-  
+    this.domNode.removeEventListener('click', this.onClick);
+    setTimeout(() => this.domNode.addEventListener('click', this.onClick), 10);
+  };
+
   glideCanvas = () => {
     this.friction -= 0.01;
     if (this.friction < 0.01) this.friction = 0.01;
@@ -144,64 +146,64 @@ class Canvas extends React.Component {
     this.animationFrame = requestAnimationFrame(this.glideCanvas.bind(this));
   };
 
-  updateNode = (node) => {
-    const nodes = [...this.state.nodes]
-    const index = findIndex(nodes, {id: node.id})
-    if( index !== -1) {
+  updateNode = node => {
+    const nodes = [...this.state.nodes];
+    const index = findIndex(nodes, { id: node.id });
+    if (index !== -1) {
       nodes.splice(index, 1, node);
     } else {
       nodes.push(node);
     }
 
-    this.setState({nodes})
-  }
+    this.setState({ nodes });
+  };
 
-  selectNode = (node) => {
-    if (node === null || !node){
-      const node = this.state.nodes.find(n => n.selected)
+  selectNode = node => {
+    if (node === null || !node) {
+      const node = this.state.nodes.find(n => n.selected);
       if (!node) return;
-      delete node.selected
-      this.updateNode(node)
+      delete node.selected;
+      this.updateNode(node);
       return;
     }
 
-    const currentlySelected = this.state.nodes.find(n => n.selected)
-    if (currentlySelected){
-      currentlySelected.selected = false
-      this.updateNode(currentlySelected)
+    const currentlySelected = this.state.nodes.find(n => n.selected);
+    if (currentlySelected) {
+      currentlySelected.selected = false;
+      this.updateNode(currentlySelected);
       if (currentlySelected.id === node.id) return;
     }
 
-    node.selected = true
-    this.updateNode(node)
-  }
+    node.selected = true;
+    this.updateNode(node);
+  };
 
   render() {
-      const somethingSelected = this.state.nodes.find(n => n.selected)
-      const nodes = this.state.nodes
-      .map(node => <Node 
-          key={node.id} 
-          node={node}
-          updateNode={this.updateNode}
-          selectNode={this.selectNode}
-          unselected={somethingSelected}
-          canvasView={this.state.view}
-        />)
+    const somethingSelected = this.state.nodes.find(n => n.selected);
+    const nodes = this.state.nodes.map(node => (
+      <Node
+        key={node.id}
+        node={node}
+        updateNode={this.updateNode}
+        selectNode={this.selectNode}
+        unselected={somethingSelected}
+        canvasView={this.state.view}
+      />
+    ));
     return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width={this.state.view.width}
-          height={this.state.view.height}
-          onWheel={this._onWheel}
-          className={styles.Canvas}
-          id='svgCanvas'
-        >
-          <g id="Canvas" transform={this.getTransform()}>
-            <Grid id="Grid" view={this.state.view} type="dot" />
-            {nodes}
-          </g>
-        </svg>
-      
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={this.state.view.width}
+        height={this.state.view.height}
+        onWheel={this._onWheel}
+        className={styles.Canvas}
+        id="svgCanvas"
+      >
+        <g id="Canvas" transform={this.getTransform()}>
+          <Grid id="Grid" view={this.state.view} type="dot" />
+          {nodes}
+        </g>
+      </svg>
     );
   }
 }
