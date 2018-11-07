@@ -1,6 +1,6 @@
 /* Normal  */
 .normal {
-  fill: #B9CDE4;
+  fill: #91A2C0;
   cursor: pointer;
   stroke: none;
 }
@@ -12,7 +12,7 @@
 }
 
 .normalIcon {
-  fill: #7F97B2;
+  fill: #596A84;
   stroke: none;
   cursor: pointer;
 }
@@ -31,7 +31,7 @@
 
 .selectedIcon {
   composes: normalIcon;
-  fill: #6C88A8;
+  fill: #596A84;
 }
 
 .selectedHighlight {

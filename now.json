@@ -1,0 +1,19 @@
+{
+  "name": "canvas",
+  "alias": "canvas.4ge.io",
+  "public": true,
+  "type": "static",
+  "build": {
+    "env": {
+      "CI": "true"
+    }
+  },
+  "static": {
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

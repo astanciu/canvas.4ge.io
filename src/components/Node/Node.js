@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import styles from './Node.module.css';
 import Icon from '../Icon/Icon.js';
 import EventManager from '../Util/EventManager.js';
+import { Spring, Transition } from 'react-spring'
 
 export default class Node extends React.Component {
   static displayName = 'Node';
@@ -12,7 +13,7 @@ export default class Node extends React.Component {
     gridSize: 50,
     snapToGrid: true
   };
-  
+  state={reset: false}
   width = 100;
   height = 100;
   
@@ -90,15 +91,40 @@ export default class Node extends React.Component {
       nodeOutline = styles.selectedOutline
       nodeIconClass = styles.selectedIcon
     }
-
-    return (
+  // <polygon className={styles.selectedHighlight} transform="translate(-28.000000, -34.000000)"  points="77.5 0 154.143248 44.25 154.143248 132.75 77.5 177 0.856751765 132.75 0.856751765 44.25"></polygon>
+  const show = this.props.node.selected
+  console.log('selected', this.props.node.id, this.props.node.selected)
+  return (
       <g id="Node" transform={this.getTransform()}>
         <g id="Hexagons" transform="translate(-50.000000, -55.000000)">
             <polygon className={nodeClass} points="50 5 93.3012702 30 93.3012702 80 50 105 6.69872981 80 6.69872981 30"></polygon>
             <polygon className={nodeOutline} strokeWidth="2" points="50 0 97.6313972 27.5 97.6313972 82.5 50 110 2.36860279 82.5 2.36860279 27.5"></polygon>
-            {this.props.node.selected ? 
-              <polygon className={styles.selectedHighlight} transform="translate(-28.000000, -34.000000)"  points="77.5 0 154.143248 44.25 154.143248 132.75 77.5 177 0.856751765 132.75 0.856751765 44.25"></polygon>
-            : null}
+            
+            {/* <Spring 
+              from={{ scale: 0 }} 
+              to={{ scale: 1 }}
+              
+              reset
+              reverse={!this.props.node.selected && this.props.unselected}
+              >
+              {props => {
+                return <polygon 
+                  className={styles.selectedHighlight} 
+                  transform={`translate(${ (1-props.scale) * (78) - 28}, ${  (1-props.scale) * (89) - 34}) scale(${props.scale})`}  
+                  points="77.5 0 154.143248 44.25 154.143248 132.75 77.5 177 0.856751765 132.75 0.856751765 44.25"></polygon>
+              }}
+            </Spring> */}
+            <Transition 
+              items={this.props.node}
+              from={{ scale: 0 }} 
+              enter={{ scale: 1 }}
+              leave={{ scale: 0 }} 
+              >
+              {show => {
+                console.log('wtf', this.props.node.id, show)
+              }}
+            </Transition>
+            
         </g>
         <g transform={`translate(${0},${0})`}>
           <Icon icon={this.props.node.icon} className={nodeIconClass} />
